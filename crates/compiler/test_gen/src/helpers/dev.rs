@@ -192,7 +192,7 @@ pub fn helper(
         .expect("failed to build output object");
     std::fs::write(&app_o_file, module_out).expect("failed to write object to file");
 
-    // std::fs::copy(&app_o_file, "/tmp/app.o").unwrap();
+    std::fs::copy(&app_o_file, "/tmp/app.o").unwrap();
 
     let (mut child, dylib_path) = link(
         &target,
