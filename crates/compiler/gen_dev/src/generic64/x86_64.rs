@@ -1426,14 +1426,7 @@ impl Assembler<X86_64GeneralReg, X86_64FloatReg> for X86_64Assembler {
         ASM: Assembler<X86_64GeneralReg, X86_64FloatReg>,
         CC: CallConv<X86_64GeneralReg, X86_64FloatReg, ASM>,
     {
-        use crate::generic64::RegStorage;
-
-        storage_manager.ensure_reg_free(buf, RegStorage::General(X86_64GeneralReg::RCX));
-
-        mov_reg64_reg64(buf, dst, src1);
-        mov_reg64_reg64(buf, X86_64GeneralReg::RCX, src2);
-
-        shl_reg64_reg64(buf, dst)
+        shift_reg64_reg64_reg64(buf, storage_manager, shl_reg64_reg64, dst, src1, src2)
     }
 
     fn shr_reg64_reg64_reg64<'a, ASM, CC>(
@@ -1446,14 +1439,7 @@ impl Assembler<X86_64GeneralReg, X86_64FloatReg> for X86_64Assembler {
         ASM: Assembler<X86_64GeneralReg, X86_64FloatReg>,
         CC: CallConv<X86_64GeneralReg, X86_64FloatReg, ASM>,
     {
-        use crate::generic64::RegStorage;
-
-        storage_manager.ensure_reg_free(buf, RegStorage::General(X86_64GeneralReg::RCX));
-
-        mov_reg64_reg64(buf, dst, src1);
-        mov_reg64_reg64(buf, X86_64GeneralReg::RCX, src2);
-
-        shr_reg64_reg64(buf, dst)
+        shift_reg64_reg64_reg64(buf, storage_manager, shr_reg64_reg64, dst, src1, src2)
     }
 
     fn sar_reg64_reg64_reg64<'a, ASM, CC>(
@@ -1466,14 +1452,45 @@ impl Assembler<X86_64GeneralReg, X86_64FloatReg> for X86_64Assembler {
         ASM: Assembler<X86_64GeneralReg, X86_64FloatReg>,
         CC: CallConv<X86_64GeneralReg, X86_64FloatReg, ASM>,
     {
-        use crate::generic64::RegStorage;
+        shift_reg64_reg64_reg64(buf, storage_manager, sar_reg64_reg64, dst, src1, src2)
+    }
+}
 
-        storage_manager.ensure_reg_free(buf, RegStorage::General(X86_64GeneralReg::RCX));
+fn shift_reg64_reg64_reg64<'a, ASM, CC>(
+    buf: &mut Vec<'a, u8>,
+    storage_manager: &mut StorageManager<'a, X86_64GeneralReg, X86_64FloatReg, ASM, CC>,
+    shift_function: fn(buf: &mut Vec<'_, u8>, X86_64GeneralReg),
+    dst: X86_64GeneralReg,
+    src1: X86_64GeneralReg,
+    src2: X86_64GeneralReg,
+) where
+    ASM: Assembler<X86_64GeneralReg, X86_64FloatReg>,
+    CC: CallConv<X86_64GeneralReg, X86_64FloatReg, ASM>,
+{
+    macro_rules! helper {
+        ($buf:expr, $dst:expr, $src1:expr, $src2:expr) => {{
+            mov_reg64_reg64($buf, $dst, $src1);
+            mov_reg64_reg64($buf, X86_64GeneralReg::RCX, $src2);
 
-        mov_reg64_reg64(buf, dst, src1);
-        mov_reg64_reg64(buf, X86_64GeneralReg::RCX, src2);
+            shift_function($buf, $dst)
+        }};
+    }
 
-        sar_reg64_reg64(buf, dst)
+    // if RCX is one of our input registers, we need to move some stuff around
+    if let X86_64GeneralReg::RCX = dst {
+        storage_manager.with_tmp_general_reg(buf, |_, buf, tmp| {
+            helper!(buf, tmp, src1, src2);
+
+            mov_reg64_reg64(buf, dst, tmp);
+        })
+    } else if let X86_64GeneralReg::RCX = src2 {
+        storage_manager.with_tmp_general_reg(buf, |_, buf, tmp| {
+            mov_reg64_reg64(buf, tmp, src2);
+
+            helper!(buf, dst, src1, tmp);
+        })
+    } else {
+        helper!(buf, dst, src1, src2)
     }
 }
 
