@@ -1881,10 +1881,6 @@ You can read this type annotation as "`stopGoOther` takes either a `Red` tag, a 
 
 So let's say you called this `stopGoOther` function passing `Foo "hello"`. Then the `a` type variable would be the closed union `[Foo Str]`, and `stopGoOther` would return a union with the type `[Stop, Go][Foo Str]` - which is equivalent to `[Stop, Go, Foo Str]`.
 
-> **Aside:** You can annotate a function as returning an open union with no named type variable -
-> such as `Str -> [Red, Green]*` - if for some reason you want any `when` expressions used on
-> that returned union to require an `_ ->` branch.
-
 Note that that a function which accepts an open union does not accept "all possible tags."
 For example, if I have a function `[Ok Str]* -> Bool` and I pass it
 `Ok 5`, that will still be a type mismatch. A `when` on that function's argument might
