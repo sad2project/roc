@@ -3543,7 +3543,6 @@ fn rec_defs_help(
 
                 hybrid_and_flex_info.vars.extend(new_infer_variables);
 
-                // TODO there is a signature_index below, can we coalesce?
                 let signature_index = constraints.push_type(signature.clone());
 
                 let annotation_expected = FromAnnotation(
@@ -3634,7 +3633,6 @@ fn rec_defs_help(
 
                         vars.push(*fn_var);
 
-                        let signature_index = constraints.push_type(signature);
                         let state_constraints = constraints.and_constraint(state.constraints);
                         let expected_index = constraints.push_expected_type(expected);
                         let cons = [
@@ -3698,8 +3696,6 @@ fn rec_defs_help(
                         );
                         let ret_constraint =
                             attach_resolution_constraints(constraints, env, ret_constraint);
-
-                        let signature_index = constraints.push_type(signature);
 
                         let cons = [
                             ret_constraint,
