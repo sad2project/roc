@@ -1498,6 +1498,13 @@ fn solve(
                     expected_type,
                 );
 
+                let cond_source_is_likely_positive_value = category_and_expected.is_ok();
+                let cond_polarity = if cond_source_is_likely_positive_value {
+                    Polarity::OF_VALUE
+                } else {
+                    Polarity::OF_PATTERN
+                };
+
                 let real_content = subs.get_content_without_compacting(real_var);
                 let branches_content = subs.get_content_without_compacting(branches_var);
                 let already_have_error = matches!(
@@ -1517,7 +1524,7 @@ fn solve(
                     branches_var,
                     real_var,
                     Mode::EQ,
-                    Polarity::OF_PATTERN,
+                    cond_polarity,
                 );
 
                 let should_check_exhaustiveness;
@@ -1570,7 +1577,7 @@ fn solve(
                                 real_var,
                                 branches_var,
                                 Mode::EQ,
-                                Polarity::OF_PATTERN
+                                cond_polarity,
                             ),
                             Success { .. }
                         );
@@ -1588,7 +1595,7 @@ fn solve(
                                 real_var,
                                 branches_var,
                                 Mode::EQ,
-                                Polarity::OF_PATTERN,
+                                cond_polarity,
                             ) {
                                 Failure(vars, actual_type, expected_type, _bad_impls) => {
                                     introduce(subs, rank, pools, &vars);
@@ -1681,7 +1688,6 @@ fn solve(
                     // `C` was matched as well. Since the positive/negative value determination is
                     // only an estimate, we also only apply this heursitic in the "almost equal"
                     // case, when there was in fact a unification error.
-                    let cond_source_is_likely_positive_value = category_and_expected.is_ok();
                     if cond_source_is_likely_positive_value && has_unification_error {
                         close_pattern_matched_tag_unions(subs, real_var);
                     }
