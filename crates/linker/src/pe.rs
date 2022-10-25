@@ -252,7 +252,11 @@ fn remove_dummy_dll_import_table_entry(executable: &mut [u8], md: &PeMetadata) {
 pub(crate) fn surgery_pe(executable_path: &Path, metadata_path: &Path, roc_app_bytes: &[u8]) {
     let md = PeMetadata::read_from_file(metadata_path);
 
+    #[cfg(unix)]
+    std::fs::write("/tmp/roc/app.obj", roc_app_bytes);
+
     let app_obj_sections = AppSections::from_data(roc_app_bytes);
+    crate::dbg_hex!(&app_obj_sections);
     let mut symbols = app_obj_sections.roc_symbols;
 
     let image_base: u64 = md.image_base;
@@ -274,7 +278,7 @@ pub(crate) fn surgery_pe(executable_path: &Path, metadata_path: &Path, roc_app_b
         ) as u64;
 
     let mut section_file_offset = md.dynhost_file_size;
-    let mut virtual_address = (app_code_section_va - image_base) as u32;
+    let mut section_virtual_address = (app_code_section_va - image_base) as u32;
 
     // find the location to write the section headers for our new sections
     let mut section_header_start = md.dynamic_relocations.section_headers_offset_in_file as usize
@@ -306,7 +310,16 @@ pub(crate) fn surgery_pe(executable_path: &Path, metadata_path: &Path, roc_app_b
         // offset_in_section now becomes a proper virtual address
         for symbol in symbols.iter_mut() {
             if symbol.section_kind == kind {
-                symbol.offset_in_section += image_base as usize + virtual_address as usize;
+                println!(
+                    "0x{:05x} -> 0x{:010x}: {}",
+                    symbol.offset_in_section,
+                    symbol.offset_in_section
+                        + image_base as usize
+                        + section_virtual_address as usize,
+                    &symbol.name,
+                );
+
+                symbol.offset_in_section += image_base as usize + section_virtual_address as usize;
             }
         }
 
@@ -325,7 +338,7 @@ pub(crate) fn surgery_pe(executable_path: &Path, metadata_path: &Path, roc_app_b
                     section_header_start,
                     section_file_offset,
                     virtual_size,
-                    virtual_address,
+                    section_virtual_address,
                     size_of_raw_data,
                 );
             }
@@ -339,7 +352,7 @@ pub(crate) fn surgery_pe(executable_path: &Path, metadata_path: &Path, roc_app_b
                     section_header_start,
                     section_file_offset,
                     virtual_size,
-                    virtual_address,
+                    section_virtual_address,
                     size_of_raw_data,
                 );
             }
@@ -369,9 +382,10 @@ pub(crate) fn surgery_pe(executable_path: &Path, metadata_path: &Path, roc_app_b
                             // we implicitly only do 32-bit relocations
                             debug_assert_eq!(relocation.size(), 32);
 
-                            let delta =
-                                destination - virtual_address as i64 - *offset_in_section as i64
-                                    + relocation.addend();
+                            let delta = destination
+                                - section_virtual_address as i64
+                                - *offset_in_section as i64
+                                + relocation.addend();
 
                             executable[offset + *offset_in_section as usize..][..4]
                                 .copy_from_slice(&(delta as i32).to_le_bytes());
@@ -382,8 +396,9 @@ pub(crate) fn surgery_pe(executable_path: &Path, metadata_path: &Path, roc_app_b
                     // we implicitly only do 32-bit relocations
                     debug_assert_eq!(relocation.size(), 32);
 
-                    let delta = destination - virtual_address as i64 - *offset_in_section as i64
-                        + relocation.addend();
+                    let delta =
+                        destination - section_virtual_address as i64 - *offset_in_section as i64
+                            + relocation.addend();
 
                     executable[offset + *offset_in_section as usize..][..4]
                         .copy_from_slice(&(delta as i32).to_le_bytes());
@@ -409,7 +424,7 @@ pub(crate) fn surgery_pe(executable_path: &Path, metadata_path: &Path, roc_app_b
 
         section_header_start += std::mem::size_of::<ImageSectionHeader>();
         section_file_offset += size_of_raw_data as usize;
-        virtual_address += next_multiple_of(length, section_alignment) as u32;
+        section_virtual_address += next_multiple_of(length, section_alignment) as u32;
         file_bytes_added += next_multiple_of(length, section_alignment) as u32;
     }
 

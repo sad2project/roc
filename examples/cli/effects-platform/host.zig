@@ -89,8 +89,9 @@ const Unit = extern struct {};
 
 pub export fn main() u8 {
     const allocator = std.heap.page_allocator;
-
     const stderr = std.io.getStdErr().writer();
+
+    var timer = std.time.Timer.start() catch unreachable;
 
     // NOTE the return size can be zero, which will segfault. Always allocate at least 8 bytes
     const size = std.math.max(8, @intCast(usize, roc__mainForHost_size()));
@@ -101,19 +102,14 @@ pub export fn main() u8 {
         allocator.free(raw_output);
     }
 
-    var ts1: std.os.timespec = undefined;
-    std.os.clock_gettime(std.os.CLOCK.REALTIME, &ts1) catch unreachable;
-
     roc__mainForHost_1_exposed_generic(output);
 
-    call_the_closure(output);
+    // call_the_closure(output);
 
-    var ts2: std.os.timespec = undefined;
-    std.os.clock_gettime(std.os.CLOCK.REALTIME, &ts2) catch unreachable;
+    const nanos = timer.read();
+    const seconds = (@intToFloat(f64, nanos) / 1_000_000_000.0);
 
-    const delta = to_seconds(ts2) - to_seconds(ts1);
-
-    stderr.print("runtime: {d:.3}ms\n", .{delta * 1000}) catch unreachable;
+    stderr.print("runtime: {d:.3}ms\n", .{seconds * 1000}) catch unreachable;
 
     return 0;
 }
