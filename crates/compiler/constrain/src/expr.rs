@@ -1619,8 +1619,7 @@ fn constrain_function_def(
             let ret_var = function_def.return_type;
             let closure_var = function_def.closure_type;
 
-            let ret_type = *ret_type.clone();
-            let ret_type_index = constraints.push_type(ret_type.clone());
+            let ret_type_index = constraints.push_type(*ret_type.clone());
 
             vars.push(ret_var);
             vars.push(closure_var);
