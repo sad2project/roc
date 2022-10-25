@@ -1132,15 +1132,16 @@ fn solve(
                 );
 
                 let expectation = &constraints.pattern_expectations[expectation_index.index()];
-                let expected = type_cell_to_var(
+                let expected = either_type_index_to_var(
+                    constraints,
                     subs,
                     rank,
+                    pools,
                     problems,
                     abilities_store,
                     obligation_cache,
-                    pools,
                     aliases,
-                    expectation.get_type_ref(),
+                    *expectation.get_type_ref(),
                 );
 
                 let mode = match constraint {
@@ -1435,22 +1436,10 @@ fn solve(
                             constraints.eq[eq.index()];
                         let expected = &constraints.expectations[expected.index()];
 
-                        let branches_var = either_type_index_to_var(
-                            constraints,
-                            subs,
-                            rank,
-                            pools,
-                            problems,
-                            abilities_store,
-                            obligation_cache,
-                            aliases,
-                            *expected.get_type_ref(),
-                        );
-
                         (
                             real_var,
                             real_region,
-                            branches_var,
+                            *expected.get_type_ref(),
                             Ok((category, expected)),
                         )
                     }
@@ -1463,21 +1452,10 @@ fn solve(
                         ) = constraints.pattern_eq[peq.index()];
                         let expected = &constraints.pattern_expectations[expected.index()];
 
-                        let branches_var = type_cell_to_var(
-                            subs,
-                            rank,
-                            problems,
-                            abilities_store,
-                            obligation_cache,
-                            pools,
-                            aliases,
-                            expected.get_type_ref(),
-                        );
-
                         (
                             real_var,
                             real_region,
-                            branches_var,
+                            *expected.get_type_ref(),
                             Err((category, expected)),
                         )
                     }
@@ -1493,6 +1471,18 @@ fn solve(
                     obligation_cache,
                     aliases,
                     real_var,
+                );
+
+                let branches_var = either_type_index_to_var(
+                    constraints,
+                    subs,
+                    rank,
+                    pools,
+                    problems,
+                    abilities_store,
+                    obligation_cache,
+                    aliases,
+                    branches_var,
                 );
 
                 let real_content = subs.get_content_without_compacting(real_var);
