@@ -1463,8 +1463,14 @@ pub fn constrain_expr(
             )
         }
         RuntimeError(_) => {
-            // Runtime Errors have no constraints because they're going to crash.
-            Constraint::True
+            // Runtime Errors are always going to crash, so they don't introduce any new
+            // constraints.
+            // Instead, trivially equate the expected type to itself. This will never yield
+            // unification errors but it will catch errors in type translation, including ability
+            // obligations.
+            let trivial_type = *expected.get_type_ref();
+            let expected = constraints.push_expected_type(expected);
+            constraints.equal_types(trivial_type, expected, Category::Unknown, region)
         }
     }
 }
@@ -1922,14 +1928,15 @@ fn constrain_value_def(
 
             let loc_pattern = Loc::at(loc_symbol.region, Pattern::Identifier(loc_symbol.value));
 
+            let signature_index = constraints.push_type(signature);
+
             let annotation_expected = FromAnnotation(
                 loc_pattern,
                 arity,
                 AnnotationSource::TypedBody {
                     region: annotation.region,
                 },
-                // TODO coalesce with other signature_index
-                constraints.push_type(signature.clone()),
+                signature_index,
             );
 
             // This will fill in inference variables in the `signature` as well, so that we can
@@ -1944,8 +1951,6 @@ fn constrain_value_def(
             );
             let ret_constraint = attach_resolution_constraints(constraints, env, ret_constraint);
 
-            let signature_index = constraints.push_type(signature.clone());
-
             let cons = [
                 ret_constraint,
                 // Store type into AST vars. We use Store so errors aren't reported twice
@@ -1953,7 +1958,6 @@ fn constrain_value_def(
             ];
             let expr_con = constraints.and_constraint(cons);
 
-            let signature_index = constraints.push_type(signature.clone());
             constrain_value_def_make_constraint(
                 constraints,
                 new_rigid_variables,
@@ -1962,7 +1966,6 @@ fn constrain_value_def(
                 body_con,
                 loc_symbol,
                 expr_var,
-                // TODO coalesce
                 signature_index,
             )
         }

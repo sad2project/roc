@@ -4589,7 +4589,7 @@ mod solve_expr {
                     removeHelp 1i64 Empty
                 "#
             ),
-            "RBTree I64 I64",
+            "RBTree (Key (Integer Signed64)) I64",
         );
     }
 
