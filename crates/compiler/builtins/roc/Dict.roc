@@ -83,7 +83,7 @@ empty = @Dict []
 withCapacity : Nat -> Dict k v
 withCapacity = \n -> @Dict (List.withCapacity n)
 
-get : Dict k v, k -> Result v [KeyNotFound]* | k has Eq
+get : Dict k v, k -> Result v [KeyNotFound] | k has Eq
 get = \@Dict list, needle ->
     when List.findFirst list (\Pair key _ -> key == needle) is
         Ok (Pair _ v) ->
