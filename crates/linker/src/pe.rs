@@ -21,7 +21,7 @@ use roc_error_macros::internal_error;
 
 use crate::{
     generate_dylib::APP_DLL, load_struct_inplace, load_struct_inplace_mut,
-    load_structs_inplace_mut, open_mmap, open_mmap_mut,
+    load_structs_inplace_mut, open_mmap, open_mmap_mut, redirect_libc_functions,
 };
 
 /// The metadata stores information about/from the host .exe because
@@ -381,7 +381,6 @@ pub(crate) fn surgery_pe(executable_path: &Path, metadata_path: &Path, roc_app_b
                 } = app_relocation;
 
                 if let Some(destination) = md.exports.get(name) {
-                    dbg!(name);
                     match relocation.kind() {
                         object::RelocationKind::Relative => {
                             // we implicitly only do 32-bit relocations
@@ -1094,15 +1093,13 @@ impl AppSections {
 
                         let address = symbol.as_ref().map(|s| s.address()).unwrap_or_default();
                         let name = symbol.and_then(|s| s.name()).unwrap_or_default();
+                        let name = redirect_libc_functions(name).unwrap_or(name).to_string();
 
-                        relocations
-                            .entry(name.to_string())
-                            .or_default()
-                            .push(AppRelocation {
-                                offset_in_section,
-                                address,
-                                relocation,
-                            });
+                        relocations.entry(name).or_default().push(AppRelocation {
+                            offset_in_section,
+                            address,
+                            relocation,
+                        });
                     }
                     _ => todo!(),
                 }
