@@ -377,6 +377,7 @@ pub(crate) fn surgery_pe(executable_path: &Path, metadata_path: &Path, roc_app_b
                 } = app_relocation;
 
                 if let Some(destination) = md.exports.get(name) {
+                    dbg!(name);
                     match relocation.kind() {
                         object::RelocationKind::Relative => {
                             // we implicitly only do 32-bit relocations
@@ -399,6 +400,18 @@ pub(crate) fn surgery_pe(executable_path: &Path, metadata_path: &Path, roc_app_b
                     let delta =
                         destination - section_virtual_address as i64 - *offset_in_section as i64
                             + relocation.addend();
+
+                    if name == "Effect_putLine_9d9f29527a6be626a8f5985b26e19b237b44872b03631811df4416fc1713178" {
+                    crate::dbg_hex!(
+                        name,
+                        destination,
+                        destination - section_virtual_address as i64,
+                        offset_in_section,
+                        relocation.addend(),
+                        delta,
+                    );
+                    }
+                    dbg!(relocation.addend());
 
                     executable[offset + *offset_in_section as usize..][..4]
                         .copy_from_slice(&(delta as i32).to_le_bytes());
