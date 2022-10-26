@@ -177,7 +177,7 @@ pub fn build_zig_host_native(
         command.args(&["-O", "ReleaseSmall"]);
     }
 
-    command.output().unwrap()
+    dbg!(command).output().unwrap()
 }
 
 #[cfg(windows)]
@@ -233,7 +233,7 @@ pub fn build_zig_host_native(
         command.args(&["-O", "ReleaseSmall"]);
     }
 
-    command.output().unwrap()
+    dbg!(command).output().unwrap()
 }
 
 #[cfg(target_os = "macos")]
