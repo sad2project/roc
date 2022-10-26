@@ -1147,6 +1147,7 @@ pub fn constrain_expr(
                     })
                     .collect(),
                 lambda_set_variables: lambda_set_variables.clone(),
+                infer_ext_in_output_types: vec![],
                 actual: Box::new(arg_type.clone()),
                 kind: AliasKind::Opaque,
             };
@@ -1212,6 +1213,7 @@ pub fn constrain_expr(
                     })
                     .collect(),
                 lambda_set_variables: lambda_set_variables.clone(),
+                infer_ext_in_output_types: vec![],
                 actual: Box::new(argument_type.clone()),
                 kind: AliasKind::Opaque,
             };
