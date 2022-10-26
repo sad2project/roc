@@ -253,7 +253,10 @@ pub(crate) fn surgery_pe(executable_path: &Path, metadata_path: &Path, roc_app_b
     let md = PeMetadata::read_from_file(metadata_path);
 
     #[cfg(unix)]
-    std::fs::write("/tmp/roc/app.obj", roc_app_bytes);
+    std::fs::write("/tmp/roc/app_linux.obj", roc_app_bytes);
+
+    #[cfg(windows)]
+    std::fs::write("app.obj", roc_app_bytes);
 
     let app_obj_sections = AppSections::from_data(roc_app_bytes);
     crate::dbg_hex!(&app_obj_sections);

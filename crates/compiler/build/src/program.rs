@@ -223,6 +223,8 @@ fn gen_from_mono_module_llvm(
 
     let code_gen_start = Instant::now();
 
+    dbg!(&target);
+
     // Generate the binary
     let target_info = roc_target::TargetInfo::from(target);
     let context = Context::create();
