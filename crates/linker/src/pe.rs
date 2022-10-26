@@ -159,6 +159,8 @@ impl PeMetadata {
         let last_host_section_size = last_host_section.size();
         let last_host_section_address = last_host_section.address();
 
+        crate::dbg_hex!(&exports);
+
         PeMetadata {
             dynhost_file_size: preprocessed_data.len(),
             image_base: optional_header.image_base.get(LE),
@@ -259,7 +261,6 @@ pub(crate) fn surgery_pe(executable_path: &Path, metadata_path: &Path, roc_app_b
     std::fs::write("app.obj", roc_app_bytes);
 
     let app_obj_sections = AppSections::from_data(roc_app_bytes);
-    crate::dbg_hex!(&app_obj_sections);
     let mut symbols = app_obj_sections.roc_symbols;
 
     let image_base: u64 = md.image_base;
