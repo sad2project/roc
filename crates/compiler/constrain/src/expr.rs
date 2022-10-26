@@ -2825,6 +2825,9 @@ fn instantiate_rigids(
     // lambda set vars are always freshly introduced in this annotation
     new_rigid_variables.extend(introduced_vars.lambda_sets.iter().copied());
 
+    // ext-infer vars are always freshly introduced in this annotation
+    new_rigid_variables.extend(introduced_vars.infer_ext_in_output.iter().copied());
+
     let new_infer_variables: Vec<Variable> =
         introduced_vars.inferred.iter().map(|v| v.value).collect();
 
@@ -2884,6 +2887,9 @@ fn instantiate_rigids_simple(
 
     // lambda set vars are always freshly introduced in this annotation
     new_rigid_variables.extend(introduced_vars.lambda_sets.iter().copied());
+
+    // ext-infer vars are always freshly introduced in this annotation
+    new_rigid_variables.extend(introduced_vars.infer_ext_in_output.iter().copied());
 
     let new_infer_variables: Vec<Variable> =
         introduced_vars.inferred.iter().map(|v| v.value).collect();
