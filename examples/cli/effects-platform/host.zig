@@ -104,7 +104,7 @@ pub export fn main() u8 {
 
     roc__mainForHost_1_exposed_generic(output);
 
-    // call_the_closure(output);
+    call_the_closure(output);
 
     const nanos = timer.read();
     const seconds = (@intToFloat(f64, nanos) / 1_000_000_000.0);

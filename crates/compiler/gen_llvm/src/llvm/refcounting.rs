@@ -986,7 +986,7 @@ pub fn build_header_help<'a, 'ctx, 'env>(
         env.module,
         fn_name,
         FunctionSpec::known_fastcc(fn_type),
-        Linkage::Private,
+        Linkage::External,
     );
 
     let subprogram = env.new_subprogram(fn_name);
