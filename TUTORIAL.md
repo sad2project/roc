@@ -1336,9 +1336,9 @@ which lets you use that comment for extra context in your output.
 ## Roc Modules
 
 Every `.roc` file is a *module*. There are three types of modules:
-    - builtin
-    - app
-    - interface
+- builtin
+- app
+- interface
 
 ### App module
 
